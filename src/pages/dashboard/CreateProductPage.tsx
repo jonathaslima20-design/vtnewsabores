@@ -76,6 +76,7 @@ export default function CreateProductPage() {
   const [priceTiers, setPriceTiers] = useState<PriceTier[]>([]);
   const [isPriceTiersValid, setIsPriceTiersValid] = useState(true);
   const [isSizesColorsOpen, setIsSizesColorsOpen] = useState(false);
+  const [isFlavorsOpen, setIsFlavorsOpen] = useState(false);
   const [images, setImages] = useState<MediaItem[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
@@ -343,18 +344,27 @@ export default function CreateProductPage() {
             </Card>
           </Collapsible>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Sabores</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CustomFlavorInput
-                value={form.watch('flavors')}
-                onChange={(flavors) => form.setValue('flavors', flavors)}
-                userId={user?.id}
-              />
-            </CardContent>
-          </Card>
+          <Collapsible open={isFlavorsOpen} onOpenChange={setIsFlavorsOpen}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Sabores</CardTitle>
+                    <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isFlavorsOpen ? 'transform rotate-180' : ''}`} />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <CustomFlavorInput
+                    value={form.watch('flavors')}
+                    onChange={(flavors) => form.setValue('flavors', flavors)}
+                    userId={user?.id}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           <Card>
             <CardHeader>
