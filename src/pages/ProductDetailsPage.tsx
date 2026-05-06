@@ -565,6 +565,25 @@ export default function ProductDetailsPage() {
                     </div>
                   )}
 
+                  {/* Available Flavors */}
+                  {hasFlavors && (
+                    <div className="space-y-3">
+                      <h3 className="text-lg font-semibold">Sabores Disponíveis</h3>
+                      <div className="flex flex-wrap gap-3">
+                        {product.flavors.map((flavor: string) => (
+                          <div
+                            key={flavor}
+                            className="flex items-center px-4 py-2 rounded-full border-2 border-primary/20 bg-background shadow-sm hover:shadow-md transition-all duration-200 hover:border-primary/40"
+                          >
+                            <span className="text-sm font-semibold text-foreground capitalize">
+                              {flavor}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
 
