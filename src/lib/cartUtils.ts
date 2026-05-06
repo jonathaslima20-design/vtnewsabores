@@ -103,8 +103,8 @@ export function generateCartOrderMessage(
 
     orderMessage += `${itemNumber}. *${item.title.trim()}*\n`;
 
-    // Add variant information if available - show color and size separately for clarity
-    if (item.selectedColor || item.selectedSize) {
+    // Add variant information if available - show color, size and flavor separately for clarity
+    if (item.selectedColor || item.selectedSize || item.selectedFlavor) {
       if (item.selectedColor) {
         const colorLabels = {
           'pt-BR': 'Cor',
@@ -120,6 +120,14 @@ export function generateCartOrderMessage(
           'es-ES': 'Tamaño',
         };
         orderMessage += `   ${sizeLabels[language] || sizeLabels['pt-BR']}: ${item.selectedSize}\n`;
+      }
+      if (item.selectedFlavor) {
+        const flavorLabels = {
+          'pt-BR': 'Sabor',
+          'en-US': 'Flavor',
+          'es-ES': 'Sabor',
+        };
+        orderMessage += `   ${flavorLabels[language] || flavorLabels['pt-BR']}: ${item.selectedFlavor}\n`;
       }
     }
 

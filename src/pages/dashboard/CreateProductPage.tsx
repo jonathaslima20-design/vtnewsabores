@@ -16,6 +16,7 @@ import { DiscountPriceInput } from '@/components/ui/discount-price-input';
 import { CategorySelector } from '@/components/ui/category-selector';
 import { GenderSelector } from '@/components/ui/gender-selector';
 import { SizesColorsSelector } from '@/components/ui/sizes-colors-selector';
+import { CustomFlavorInput } from '@/components/ui/custom-flavor-input';
 import { TieredPricingManager } from '@/components/ui/tiered-pricing-manager';
 import { PricingModeToggle } from '@/components/ui/pricing-mode-toggle';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,6 +49,7 @@ const productSchema = z.object({
   is_visible_on_storefront: z.boolean().default(true),
   colors: z.array(z.string()).default([]),
   sizes: z.array(z.string()).default([]),
+  flavors: z.array(z.string()).default([]),
   has_tiered_pricing: z.boolean().default(false),
 });
 
@@ -99,6 +101,7 @@ export default function CreateProductPage() {
       is_visible_on_storefront: true,
       colors: [],
       sizes: [],
+      flavors: [],
       has_tiered_pricing: false,
     },
   });
@@ -154,6 +157,7 @@ export default function CreateProductPage() {
         is_visible_on_storefront: data.is_visible_on_storefront,
         colors: data.colors,
         sizes: data.sizes,
+        flavors: data.flavors,
         has_tiered_pricing: pricingMode === 'tiered',
         pricing_mode: pricingMode === 'tiered' ? 'exact' : 'range',
       };
@@ -338,6 +342,19 @@ export default function CreateProductPage() {
               </CollapsibleContent>
             </Card>
           </Collapsible>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Sabores</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CustomFlavorInput
+                value={form.watch('flavors')}
+                onChange={(flavors) => form.setValue('flavors', flavors)}
+                userId={user?.id}
+              />
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

@@ -275,12 +275,17 @@ export default function ProductDetailsPage() {
                    product.colors.length > 0 &&
                    product.colors.some(color => color && color.trim().length > 0);
                    
-  const hasSizes = product.sizes && 
-                  Array.isArray(product.sizes) && 
+  const hasSizes = product.sizes &&
+                  Array.isArray(product.sizes) &&
                   product.sizes.length > 0 &&
                   product.sizes.some(size => size && size.trim().length > 0);
-                  
-  const hasOptions = hasColors || hasSizes;
+
+  const hasFlavors = product.flavors &&
+                    Array.isArray(product.flavors) &&
+                    product.flavors.length > 0 &&
+                    product.flavors.some(flavor => flavor && flavor.trim().length > 0);
+
+  const hasOptions = hasColors || hasSizes || hasFlavors;
 
   const totalInCart = getItemQuantity(product.id);
 

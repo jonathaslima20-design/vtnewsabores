@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Minus, X, TrendingDown, Trash2, Palette, Ruler } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, TrendingDown, Trash2, Palette, Ruler, IceCreamBowl as IceCream } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -61,6 +61,7 @@ export default function ProductVariantModal({
   const [minQuantity, setMinQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
+  const [selectedFlavor, setSelectedFlavor] = useState<string | undefined>();
   const { addToCart, hasVariant, getVariantQuantity } = useCart();
   const { t } = useTranslation(language);
 
@@ -108,12 +109,19 @@ export default function ProductVariantModal({
   );
                    
   const hasSizes = Boolean(
-    product.sizes && 
-    Array.isArray(product.sizes) && 
+    product.sizes &&
+    Array.isArray(product.sizes) &&
     product.sizes.length > 0 &&
     product.sizes.some(size => size && typeof size === 'string' && size.trim().length > 0)
   );
-                  
+
+  const hasFlavors = Boolean(
+    product.flavors &&
+    Array.isArray(product.flavors) &&
+    product.flavors.length > 0 &&
+    product.flavors.some(flavor => flavor && typeof flavor === 'string' && flavor.trim().length > 0)
+  );
+
   const hasOptions = hasColors || hasSizes;
 
   // Debug logging for development
@@ -185,6 +193,9 @@ export default function ProductVariantModal({
       setNewItemColor(undefined);
       setNewItemSize(undefined);
       setNewItemQuantity(1);
+      setSelectedFlavor(undefined);
+      setSelectedColor(undefined);
+      setSelectedSize(undefined);
     }
   }, [open, hasTieredPricing, minQuantity]);
 
@@ -248,6 +259,11 @@ export default function ProductVariantModal({
     // Calculate the unit price (with tiered pricing if applicable)
     const unitPrice = hasTieredPricing && pricingInfo ? pricingInfo.unitPrice : undefined;
 
+    if (hasFlavors && !selectedFlavor) {
+      toast.error('Selecione um sabor antes de adicionar ao carrinho');
+      return;
+    }
+
     // If distribution mode is active and has options
     if (distributionMode && hasOptions) {
       // Validate distribution is complete
@@ -263,13 +279,13 @@ export default function ProductVariantModal({
 
       // Add each distribution item to cart separately
       distributionItems.forEach(item => {
-        addToCart(product, item.color, item.size, item.quantity, unitPrice);
+        addToCart(product, item.color, item.size, item.quantity, unitPrice, selectedFlavor);
       });
 
       toast.success(`${quantity} ${quantity === 1 ? 'item adicionado' : 'itens adicionados'} ao carrinho`);
     } else {
       // Simple add to cart - pass selected color and size if available
-      addToCart(product, selectedColor, selectedSize, quantity, unitPrice);
+      addToCart(product, selectedColor, selectedSize, quantity, unitPrice, selectedFlavor);
       toast.success(`${quantity} ${quantity === 1 ? 'item adicionado' : 'itens adicionados'} ao carrinho`);
     }
 
@@ -278,7 +294,7 @@ export default function ProductVariantModal({
   };
 
   // Can add to cart if distribution is complete (when in distribution mode) or no options
-  const canAddToCart = distributionMode ? isDistributionComplete : true;
+  const canAddToCart = (distributionMode ? isDistributionComplete : true) && (!hasFlavors || !!selectedFlavor);
 
   // Calculate price with tiered pricing if applicable
   let price = product.discounted_price || product.price;
@@ -760,6 +776,32 @@ export default function ProductVariantModal({
             </div>
           )}
 
+
+          {/* Flavor Selection */}
+          {hasFlavors && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <IceCream className="h-4 w-4" />
+                Sabor <span className="text-destructive">*</span>
+              </Label>
+              <Select value={selectedFlavor || ''} onValueChange={(value) => setSelectedFlavor(value || undefined)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um sabor">
+                    {selectedFlavor && (
+                      <span className="capitalize">{selectedFlavor}</span>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {product.flavors!.map((flavor: string) => (
+                    <SelectItem key={flavor} value={flavor}>
+                      <span className="capitalize">{flavor}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Total Price */}
           <div className="flex justify-between items-center p-3 bg-muted rounded-lg">

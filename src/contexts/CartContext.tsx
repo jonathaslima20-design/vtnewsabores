@@ -7,19 +7,19 @@ import { supabase } from '@/lib/supabase';
 
 interface CartContextType {
   cart: CartState;
-  addToCart: (product: Product, selectedColor?: string, selectedSize?: string, quantity?: number, appliedTierPrice?: number) => void;
+  addToCart: (product: Product, selectedColor?: string, selectedSize?: string, quantity?: number, appliedTierPrice?: number, selectedFlavor?: string) => void;
   removeFromCart: (productId: string) => void;
   removeCartVariant: (variantId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   updateVariantQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
   isInCart: (productId: string) => boolean;
-  hasVariant: (productId: string, color?: string, size?: string) => boolean;
+  hasVariant: (productId: string, color?: string, size?: string, flavor?: string) => boolean;
   getItemQuantity: (productId: string) => number;
-  getVariantQuantity: (productId: string, color?: string, size?: string) => number;
+  getVariantQuantity: (productId: string, color?: string, size?: string, flavor?: string) => number;
   updateItemNotes: (productId: string, notes: string) => void;
   updateVariantNotes: (variantId: string, notes: string) => void;
-  updateVariantOptions: (variantId: string, color?: string, size?: string) => void;
+  updateVariantOptions: (variantId: string, color?: string, size?: string, flavor?: string) => void;
   recalculateTieredPrices: () => Promise<void>;
   addDistribution: (product: Product, totalQuantity: number, items: Array<{ color?: string; size?: string; quantity: number }>) => Promise<boolean>;
   removeDistribution: (distributionId: string) => Promise<boolean>;
@@ -101,11 +101,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     calculateTotals();
   }, [cart.items, cart.distributions]);
 
-  const generateVariantId = (productId: string, color?: string, size?: string) => {
-    return `${productId}-${color || 'no-color'}-${size || 'no-size'}`;
+  const generateVariantId = (productId: string, color?: string, size?: string, flavor?: string) => {
+    return `${productId}-${color || 'no-color'}-${size || 'no-size'}-${flavor || 'no-flavor'}`;
   };
 
-  const addToCart = (product: Product, selectedColor?: string, selectedSize?: string, quantity: number = 1, appliedTierPrice?: number) => {
+  const addToCart = (product: Product, selectedColor?: string, selectedSize?: string, quantity: number = 1, appliedTierPrice?: number, selectedFlavor?: string) => {
     // Check if product has a price (either base price or tiered price)
     const hasValidPrice = (product.price && product.price > 0) || (product.has_tiered_pricing && appliedTierPrice && appliedTierPrice > 0);
 
@@ -114,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const variantId = generateVariantId(product.id, selectedColor, selectedSize);
+    const variantId = generateVariantId(product.id, selectedColor, selectedSize, selectedFlavor);
 
     setCart(prev => {
       const existingItem = prev.items.find(item => item.variantId === variantId);
@@ -132,7 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             : item
         );
 
-        const variantText = [selectedColor, selectedSize].filter(Boolean).join(', ');
+        const variantText = [selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
         toast.success(`Quantidade atualizada: ${product.title}${variantText ? ` (${variantText})` : ''}`);
         return { ...prev, items: updatedItems };
       } else {
@@ -155,13 +155,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
           notes: '',
           selectedColor,
           selectedSize,
+          selectedFlavor,
           availableColors: product.colors,
           availableSizes: product.sizes,
+          availableFlavors: product.flavors,
           has_tiered_pricing: product.has_tiered_pricing,
           applied_tier_price: appliedTierPrice,
         };
 
-        const variantText = [selectedColor, selectedSize].filter(Boolean).join(', ');
+        const variantText = [selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
         toast.success(`Adicionado ao carrinho: ${product.title}${variantText ? ` (${variantText})` : ''}`);
         return { ...prev, items: [...prev.items, newItem] };
       }
@@ -186,7 +188,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart(prev => {
       const item = prev.items.find(item => item.variantId === variantId);
       if (item) {
-        const variantText = [item.selectedColor, item.selectedSize].filter(Boolean).join(', ');
+        const variantText = [item.selectedColor, item.selectedSize, item.selectedFlavor].filter(Boolean).join(', ');
         toast.success(`Removido do carrinho: ${item.title}${variantText ? ` (${variantText})` : ''}`);
       }
       
@@ -241,8 +243,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cart.items.some(item => item.id === productId);
   };
 
-  const hasVariant = (productId: string, color?: string, size?: string): boolean => {
-    const variantId = generateVariantId(productId, color, size);
+  const hasVariant = (productId: string, color?: string, size?: string, flavor?: string): boolean => {
+    const variantId = generateVariantId(productId, color, size, flavor);
     return cart.items.some(item => item.variantId === variantId);
   };
   const getItemQuantity = (productId: string): number => {
@@ -252,8 +254,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .reduce((total, item) => total + item.quantity, 0);
   };
 
-  const getVariantQuantity = (productId: string, color?: string, size?: string): number => {
-    const variantId = generateVariantId(productId, color, size);
+  const getVariantQuantity = (productId: string, color?: string, size?: string, flavor?: string): number => {
+    const variantId = generateVariantId(productId, color, size, flavor);
     const item = cart.items.find(item => item.variantId === variantId);
     return item?.quantity || 0;
   };
@@ -280,12 +282,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const updateVariantOptions = (variantId: string, color?: string, size?: string) => {
+  const updateVariantOptions = (variantId: string, color?: string, size?: string, flavor?: string) => {
     setCart(prev => {
       const item = prev.items.find(item => item.variantId === variantId);
       if (!item) return prev;
 
-      const newVariantId = generateVariantId(item.id, color, size);
+      const newVariantId = generateVariantId(item.id, color, size, flavor ?? item.selectedFlavor);
       
       // Check if this new variant already exists
       const existingVariant = prev.items.find(item => item.variantId === newVariantId);
@@ -306,11 +308,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // Update the variant options
         const updatedItems = prev.items.map(item =>
           item.variantId === variantId
-            ? { 
-                ...item, 
+            ? {
+                ...item,
                 variantId: newVariantId,
                 selectedColor: color,
-                selectedSize: size
+                selectedSize: size,
+                selectedFlavor: flavor ?? item.selectedFlavor
               }
             : item
         );

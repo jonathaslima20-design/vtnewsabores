@@ -103,6 +103,7 @@ export interface Product {
   product_images?: ProductImage[];
   colors?: string[];
   sizes?: string[];
+  flavors?: string[];
   price_tiers?: PriceTier[];
 }
 
@@ -195,8 +196,10 @@ export interface CartItem {
   notes?: string;
   selectedColor?: string;
   selectedSize?: string;
+  selectedFlavor?: string;
   availableColors?: string[];
   availableSizes?: string[];
+  availableFlavors?: string[];
   variantId?: string;
   has_tiered_pricing?: boolean;
   applied_tier_price?: number;

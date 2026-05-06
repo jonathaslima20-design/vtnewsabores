@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus, Trash2, ShoppingCart, MessageCircle, Edit3, Palette, Ruler, TrendingDown, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingCart, MessageCircle, CreditCard as Edit3, Palette, Ruler, TrendingDown, Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -371,7 +371,7 @@ export default function CartModal({
                       )}
 
                       {/* Selected Variant Display */}
-                      {(item.selectedColor || item.selectedSize) && (
+                      {(item.selectedColor || item.selectedSize || item.selectedFlavor) && (
                         <div className="mb-2">
                           {editingVariant === item.variantId ? (
                             <div className="space-y-2">
@@ -493,6 +493,12 @@ export default function CartModal({
                                 <div className="flex items-center gap-1">
                                   <Ruler className="h-3 w-3" />
                                   <span>{item.selectedSize}</span>
+                                </div>
+                              )}
+                              {item.selectedFlavor && (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Sabor:</span>
+                                  <span className="capitalize">{item.selectedFlavor}</span>
                                 </div>
                               )}
                               <Edit3 className="h-3 w-3 ml-1" />
