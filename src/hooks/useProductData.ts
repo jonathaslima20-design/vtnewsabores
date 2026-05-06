@@ -136,6 +136,10 @@ export function useProductData({
           short_description,
           colors,
           sizes,
+          flavors,
+          has_weight_variants,
+          min_variant_price,
+          max_variant_price,
           external_checkout_url
         `)
         .eq('user_id', userId)
