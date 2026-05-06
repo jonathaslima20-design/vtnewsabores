@@ -175,18 +175,15 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
 }
 
 function PhoneCarousel() {
-  const catalogView = '/mockup-1.png';
-  const productDetailsA = '/mockup-2.png';
-  const productDetailsB = '/mockup-3.png';
+  const mockup1 = '/mockup-1.png';
+  const mockup2 = '/mockup-2.png';
+  const mockup3 = '/mockup-3.png';
   const screens = [
-    { src: catalogView, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
-    { src: productDetailsA, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
-    { src: productDetailsB, rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
-    { src: catalogView, rotate: 'rotate(-6deg)', bob: 'lp-bob-a' },
-    { src: productDetailsA, rotate: 'rotate(4deg)', bob: 'lp-bob-b' },
-    { src: productDetailsB, rotate: 'rotate(-4deg)', bob: 'lp-bob-c' },
+    { src: mockup1, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
+    { src: mockup2, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
+    { src: mockup3, rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
   ];
-  const sequence = [...screens, ...screens];
+  const sequence = [...screens, ...screens, ...screens, ...screens];
 
   return (
     <div className="relative h-full w-full lp-carousel">
