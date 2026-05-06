@@ -158,7 +158,7 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
             <img
               src={src}
               alt="VitrineTurbo screen"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-top"
               loading="lazy"
               onError={(e) => {
                 const img = e.currentTarget;
@@ -175,16 +175,16 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
 }
 
 function PhoneCarousel() {
-  const shoe1 = 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=600';
-  const shoe2 = 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=600';
-  const shoe3 = 'https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg?auto=compress&cs=tinysrgb&w=600';
+  const catalogView = '/mockup-1.png';
+  const productDetailsA = '/mockup-2.png';
+  const productDetailsB = '/mockup-3.png';
   const screens = [
-    { src: shoe1, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
-    { src: shoe2, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
-    { src: shoe3, rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
-    { src: shoe1, rotate: 'rotate(-6deg)', bob: 'lp-bob-a' },
-    { src: shoe3, rotate: 'rotate(4deg)', bob: 'lp-bob-b' },
-    { src: shoe2, rotate: 'rotate(-4deg)', bob: 'lp-bob-c' },
+    { src: catalogView, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
+    { src: productDetailsA, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
+    { src: productDetailsB, rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
+    { src: catalogView, rotate: 'rotate(-6deg)', bob: 'lp-bob-a' },
+    { src: productDetailsA, rotate: 'rotate(4deg)', bob: 'lp-bob-b' },
+    { src: productDetailsB, rotate: 'rotate(-4deg)', bob: 'lp-bob-c' },
   ];
   const sequence = [...screens, ...screens];
 
