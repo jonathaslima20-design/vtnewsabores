@@ -266,8 +266,10 @@ export default function ProductDetailsPage() {
     ? Math.round(((product.price - product.discounted_price) / product.price) * 100)
     : null;
 
+  const hasWeightVariants = !!product.has_weight_variants && (product.min_variant_price ?? 0) > 0;
+
   const isAvailable = product.status === 'disponivel';
-  const hasPrice = (product.price && product.price > 0) || (product.has_tiered_pricing && priceTiers.length > 0);
+  const hasPrice = (product.price && product.price > 0) || (product.has_tiered_pricing && priceTiers.length > 0) || hasWeightVariants;
 
   // Check if product has color or size options
   const hasColors = product.colors && 
@@ -292,13 +294,13 @@ export default function ProductDetailsPage() {
   const handleAddToCart = () => {
     if (!isAvailable || !hasPrice) return;
 
-    // If product has options (colors/sizes) OR tiered pricing, show variant modal
-    if (hasOptions || product.has_tiered_pricing) {
+    // If product has options, tiered pricing, or weight variants, show variant modal
+    if (hasOptions || product.has_tiered_pricing || hasWeightVariants) {
       setShowVariantModal(true);
       return;
     }
 
-    // For simple products without options or tiered pricing, add directly to cart
+    // For simple products without options, tiered pricing, or weight variants, add directly to cart
     addToCart(product);
   };
 
@@ -352,7 +354,18 @@ export default function ProductDetailsPage() {
               
               {/* Price information */}
               <div className="mt-6 mb-8">
-                {loadingTiers && product.has_tiered_pricing ? (
+                {hasWeightVariants ? (
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-primary">
+                      {t('product.starting_from')} {formatCurrencyI18n(product.min_variant_price!, currency, language)}
+                    </div>
+                    {product.short_description && (
+                      <div className="text-sm text-green-600 font-medium">
+                        {product.short_description}
+                      </div>
+                    )}
+                  </div>
+                ) : loadingTiers && product.has_tiered_pricing ? (
                   <div className="text-lg font-bold text-muted-foreground animate-pulse">
                     Carregando preços...
                   </div>

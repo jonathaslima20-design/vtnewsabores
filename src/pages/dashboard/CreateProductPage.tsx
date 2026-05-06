@@ -24,8 +24,9 @@ import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import type { PriceTier } from '@/types';
+import type { PriceTier, WeightVariant } from '@/types';
 import { ProductImageManager } from '@/components/product/ProductImageManager';
+import { ProductWeightVariantsManager } from '@/components/product/ProductWeightVariantsManager';
 import { uploadProductImages, saveProductImages } from '@/lib/productImageService';
 import { PromotionalPhraseSelector } from '@/components/ui/promotional-phrase-selector';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
@@ -77,6 +78,9 @@ export default function CreateProductPage() {
   const [isPriceTiersValid, setIsPriceTiersValid] = useState(true);
   const [isSizesColorsOpen, setIsSizesColorsOpen] = useState(false);
   const [isFlavorsOpen, setIsFlavorsOpen] = useState(false);
+  const [isWeightVariantsOpen, setIsWeightVariantsOpen] = useState(false);
+  const [hasWeightVariants, setHasWeightVariants] = useState(false);
+  const [weightVariants, setWeightVariants] = useState<WeightVariant[]>([]);
   const [images, setImages] = useState<MediaItem[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
 
@@ -130,6 +134,25 @@ export default function CreateProductPage() {
       return;
     }
 
+    if (hasWeightVariants) {
+      if (weightVariants.length < 2) {
+        toast.error('Adicione ao menos 2 variações de peso');
+        return;
+      }
+      const invalid = weightVariants.find(
+        (v) => !v.label.trim() || v.price <= 0
+      );
+      if (invalid) {
+        toast.error('Preencha rótulo e preço válidos em todas as variações de peso');
+        return;
+      }
+      const labels = weightVariants.map((v) => v.label.trim().toLowerCase());
+      if (new Set(labels).size !== labels.length) {
+        toast.error('Existem rótulos duplicados nas variações de peso');
+        return;
+      }
+    }
+
     if (pricingMode === 'tiered' && !isPriceTiersValid) {
       toast.error('Por favor, corrija os erros nos níveis de preço antes de salvar');
       return;
@@ -161,6 +184,7 @@ export default function CreateProductPage() {
         flavors: data.flavors,
         has_tiered_pricing: pricingMode === 'tiered',
         pricing_mode: pricingMode === 'tiered' ? 'exact' : 'range',
+        has_weight_variants: hasWeightVariants,
       };
 
       const { data: product, error: productError } = await supabase
@@ -195,6 +219,22 @@ export default function CreateProductPage() {
           await saveProductImages(product.id, uploadedImages, user.id);
         }
         setUploadingImages(false);
+      }
+
+      if (hasWeightVariants && weightVariants.length > 0) {
+        const variantRows = weightVariants.map((v, idx) => ({
+          product_id: product.id,
+          label: v.label.trim(),
+          unit_value: Number(v.unit_value) || 0,
+          unit_type: v.unit_type,
+          price: Number(v.price) || 0,
+          discounted_price: v.discounted_price ?? null,
+          display_order: idx,
+        }));
+        const { error: variantsError } = await supabase
+          .from('product_weight_variants')
+          .insert(variantRows);
+        if (variantsError) throw variantsError;
       }
 
       if (pricingMode === 'tiered' && priceTiers.length > 0) {
@@ -366,11 +406,42 @@ export default function CreateProductPage() {
             </Card>
           </Collapsible>
 
+          <Collapsible open={isWeightVariantsOpen} onOpenChange={setIsWeightVariantsOpen}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Variações de Peso</CardTitle>
+                    <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isWeightVariantsOpen ? 'transform rotate-180' : ''}`} />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <ProductWeightVariantsManager
+                    enabled={hasWeightVariants}
+                    onEnabledChange={setHasWeightVariants}
+                    variants={weightVariants}
+                    onChange={setWeightVariants}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
           <Card>
             <CardHeader>
               <CardTitle>Preços</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {hasWeightVariants && (
+                <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground border">
+                  O preço é definido em cada variação de peso. A vitrine exibirá "A partir
+                  de" usando o menor preço cadastrado.
+                </div>
+              )}
+              {!hasWeightVariants && (
+              <>
               <PricingModeToggle
                 isTieredPricing={pricingMode === 'tiered'}
                 onModeChange={(useTieredPricing) => {
@@ -456,6 +527,8 @@ export default function CreateProductPage() {
                   onValidationChange={setIsPriceTiersValid}
                   currency={userCurrency}
                 />
+              )}
+              </>
               )}
             </CardContent>
           </Card>

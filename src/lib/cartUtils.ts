@@ -103,6 +103,15 @@ export function generateCartOrderMessage(
 
     orderMessage += `${itemNumber}. *${item.title.trim()}*\n`;
 
+    if (item.selectedVariantLabel) {
+      const weightLabels = {
+        'pt-BR': 'Variação',
+        'en-US': 'Variant',
+        'es-ES': 'Variación',
+      };
+      orderMessage += `   ${weightLabels[language] || weightLabels['pt-BR']}: ${item.selectedVariantLabel}\n`;
+    }
+
     // Add variant information if available - show color, size and flavor separately for clarity
     if (item.selectedColor || item.selectedSize || item.selectedFlavor) {
       if (item.selectedColor) {
@@ -224,7 +233,7 @@ export function calculateCartStats(cartItems: CartItem[]) {
  * Validate cart item before adding
  */
 export function validateCartItem(item: CartItem): boolean {
-  const hasValidPrice = (item.price && item.price > 0) || (item.has_tiered_pricing && item.applied_tier_price && item.applied_tier_price > 0);
+  const hasValidPrice = (item.price && item.price > 0) || (item.has_tiered_pricing && item.applied_tier_price && item.applied_tier_price > 0) || (item.variantPrice && item.variantPrice > 0);
   return !!(
     item.id &&
     item.title &&

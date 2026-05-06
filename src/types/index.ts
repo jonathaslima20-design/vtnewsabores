@@ -62,6 +62,21 @@ export interface ProductImage {
   display_order?: number;
 }
 
+export type WeightUnitType = 'kg' | 'g' | 'ml' | 'l' | 'un' | 'cps';
+
+export interface WeightVariant {
+  id?: string;
+  product_id?: string;
+  label: string;
+  unit_value: number;
+  unit_type: WeightUnitType;
+  price: number;
+  discounted_price?: number | null;
+  display_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface PriceTier {
   id?: string;
   product_id?: string;
@@ -98,6 +113,9 @@ export interface Product {
   has_tiered_pricing?: boolean;
   min_tiered_price?: number;
   max_tiered_price?: number;
+  has_weight_variants?: boolean;
+  min_variant_price?: number;
+  max_variant_price?: number;
   created_at: string;
   updated_at?: string;
   product_images?: ProductImage[];
@@ -105,6 +123,7 @@ export interface Product {
   sizes?: string[];
   flavors?: string[];
   price_tiers?: PriceTier[];
+  weight_variants?: WeightVariant[];
 }
 
 export interface ProductCategory {
@@ -203,6 +222,9 @@ export interface CartItem {
   variantId?: string;
   has_tiered_pricing?: boolean;
   applied_tier_price?: number;
+  selectedVariantId?: string;
+  selectedVariantLabel?: string;
+  variantPrice?: number;
 }
 
 export interface DistributionItem {

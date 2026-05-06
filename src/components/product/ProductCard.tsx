@@ -82,8 +82,11 @@ function ProductCardComponent({
     : null;
   const isTieredPricing = product.has_tiered_pricing && effectiveMinPrice !== null && effectiveMinPrice > 0;
 
+  const hasWeightVariants = !!product.has_weight_variants && (product.min_variant_price ?? 0) > 0;
+  const weightVariantMinPrice = hasWeightVariants ? Number(product.min_variant_price) : null;
+
   const isAvailable = product.status === 'disponivel';
-  const hasPrice = (displayPrice && displayPrice > 0) || (product.has_tiered_pricing && minimumTieredPrice && minimumTieredPrice > 0);
+  const hasPrice = (displayPrice && displayPrice > 0) || (product.has_tiered_pricing && minimumTieredPrice && minimumTieredPrice > 0) || hasWeightVariants;
   
   // More robust checking for colors and sizes with debug logging
   const hasColors = product.colors && 
@@ -123,13 +126,13 @@ function ProductCardComponent({
     e.stopPropagation();
 
     // If product has options (colors/sizes) OR tiered pricing, show variant modal
-    if (isAvailable && hasPrice && (hasOptions || product.has_tiered_pricing)) {
+    if (isAvailable && hasPrice && (hasOptions || product.has_tiered_pricing || hasWeightVariants)) {
       setShowVariantModal(true);
       return;
     }
 
     // For simple products without options or tiered pricing, add directly to cart
-    if (isAvailable && hasPrice && !hasOptions && !product.has_tiered_pricing) {
+    if (isAvailable && hasPrice && !hasOptions && !product.has_tiered_pricing && !hasWeightVariants) {
       addToCart(product);
       return;
     }
@@ -219,7 +222,11 @@ function ProductCardComponent({
             
             <div className="mt-auto">
               {/* Price Display */}
-              {loadingTiers && product.has_tiered_pricing ? (
+              {hasWeightVariants && weightVariantMinPrice ? (
+                <div className="text-sm md:text-lg font-bold text-primary">
+                  {t('product.starting_from')} {formatCurrencyI18n(weightVariantMinPrice, currency, language)}
+                </div>
+              ) : loadingTiers && product.has_tiered_pricing ? (
                 <div className="text-sm md:text-lg font-bold text-muted-foreground animate-pulse">
                   Carregando preços...
                 </div>
@@ -334,6 +341,8 @@ const arePropsEqual = (prevProps: ProductCardProps, nextProps: ProductCardProps)
     prevProps.product.sizes === nextProps.product.sizes &&
     prevProps.product.status === nextProps.product.status &&
     prevProps.product.has_tiered_pricing === nextProps.product.has_tiered_pricing &&
+    prevProps.product.has_weight_variants === nextProps.product.has_weight_variants &&
+    prevProps.product.min_variant_price === nextProps.product.min_variant_price &&
     prevProps.currency === nextProps.currency &&
     prevProps.language === nextProps.language &&
     prevProps.corretorSlug === nextProps.corretorSlug

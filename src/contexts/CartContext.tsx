@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 
 interface CartContextType {
   cart: CartState;
-  addToCart: (product: Product, selectedColor?: string, selectedSize?: string, quantity?: number, appliedTierPrice?: number, selectedFlavor?: string) => void;
+  addToCart: (product: Product, selectedColor?: string, selectedSize?: string, quantity?: number, appliedTierPrice?: number, selectedFlavor?: string, selectedWeightVariant?: { id: string; label: string; price: number }) => void;
   removeFromCart: (productId: string) => void;
   removeCartVariant: (variantId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -101,20 +101,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     calculateTotals();
   }, [cart.items, cart.distributions]);
 
-  const generateVariantId = (productId: string, color?: string, size?: string, flavor?: string) => {
-    return `${productId}-${color || 'no-color'}-${size || 'no-size'}-${flavor || 'no-flavor'}`;
+  const generateVariantId = (productId: string, color?: string, size?: string, flavor?: string, weightVariantId?: string) => {
+    return `${productId}-${color || 'no-color'}-${size || 'no-size'}-${flavor || 'no-flavor'}-${weightVariantId || 'no-weight'}`;
   };
 
-  const addToCart = (product: Product, selectedColor?: string, selectedSize?: string, quantity: number = 1, appliedTierPrice?: number, selectedFlavor?: string) => {
-    // Check if product has a price (either base price or tiered price)
-    const hasValidPrice = (product.price && product.price > 0) || (product.has_tiered_pricing && appliedTierPrice && appliedTierPrice > 0);
+  const addToCart = (product: Product, selectedColor?: string, selectedSize?: string, quantity: number = 1, appliedTierPrice?: number, selectedFlavor?: string, selectedWeightVariant?: { id: string; label: string; price: number }) => {
+    // Check if product has a price (either base price, tiered price, or weight variant price)
+    const hasValidPrice = (product.price && product.price > 0) || (product.has_tiered_pricing && appliedTierPrice && appliedTierPrice > 0) || (selectedWeightVariant && selectedWeightVariant.price > 0);
 
     if (!hasValidPrice) {
       toast.error('Este produto não pode ser adicionado ao carrinho pois não possui preço definido.');
       return;
     }
 
-    const variantId = generateVariantId(product.id, selectedColor, selectedSize, selectedFlavor);
+    const variantId = generateVariantId(product.id, selectedColor, selectedSize, selectedFlavor, selectedWeightVariant?.id);
 
     setCart(prev => {
       const existingItem = prev.items.find(item => item.variantId === variantId);
@@ -132,13 +132,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
             : item
         );
 
-        const variantText = [selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
+        const variantText = [selectedWeightVariant?.label, selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
         toast.success(`Quantidade atualizada: ${product.title}${variantText ? ` (${variantText})` : ''}`);
         return { ...prev, items: updatedItems };
       } else {
         // Add new item to cart
-        // For tiered pricing products without base price, use applied tier price as base price
-        const effectivePrice = product.has_tiered_pricing && appliedTierPrice && (!product.price || product.price === 0)
+        // Priority: weight variant price > tiered price > product price
+        const effectivePrice = selectedWeightVariant
+          ? selectedWeightVariant.price
+          : product.has_tiered_pricing && appliedTierPrice && (!product.price || product.price === 0)
           ? appliedTierPrice
           : product.price;
 
@@ -147,7 +149,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           variantId,
           title: product.title,
           price: effectivePrice,
-          discounted_price: product.discounted_price,
+          discounted_price: selectedWeightVariant ? undefined : product.discounted_price,
           quantity: quantity,
           featured_image_url: product.featured_image_url,
           short_description: product.short_description,
@@ -161,9 +163,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
           availableFlavors: product.flavors,
           has_tiered_pricing: product.has_tiered_pricing,
           applied_tier_price: appliedTierPrice,
+          selectedVariantId: selectedWeightVariant?.id,
+          selectedVariantLabel: selectedWeightVariant?.label,
+          variantPrice: selectedWeightVariant?.price,
         };
 
-        const variantText = [selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
+        const variantText = [selectedWeightVariant?.label, selectedColor, selectedSize, selectedFlavor].filter(Boolean).join(', ');
         toast.success(`Adicionado ao carrinho: ${product.title}${variantText ? ` (${variantText})` : ''}`);
         return { ...prev, items: [...prev.items, newItem] };
       }

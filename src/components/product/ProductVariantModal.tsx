@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Minus, X, TrendingDown, Trash2, Palette, Ruler, IceCreamBowl as IceCream } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, X, TrendingDown, Trash2, Palette, Ruler, IceCreamBowl as IceCream, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatCurrencyI18n, useTranslation, type SupportedLanguage, type SupportedCurrency } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { getColorValue } from '@/lib/utils';
-import type { Product, PriceTier } from '@/types';
+import type { Product, PriceTier, WeightVariant } from '@/types';
 import { fetchProductPriceTiers, calculateApplicablePrice, formatPriceTierRange } from '@/lib/tieredPricingUtils';
 import { supabase } from '@/lib/supabase';
 import TieredPricingIndicator from '@/components/product/TieredPricingIndicator';
@@ -62,6 +62,9 @@ export default function ProductVariantModal({
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [selectedSize, setSelectedSize] = useState<string | undefined>();
   const [selectedFlavor, setSelectedFlavor] = useState<string | undefined>();
+  const [weightVariants, setWeightVariants] = useState<WeightVariant[]>([]);
+  const [selectedWeightVariantId, setSelectedWeightVariantId] = useState<string | undefined>();
+  const hasWeightVariants = !!product.has_weight_variants;
   const { addToCart, hasVariant, getVariantQuantity } = useCart();
   const { t } = useTranslation(language);
 
@@ -99,6 +102,34 @@ export default function ProductVariantModal({
       loadTieredPricing();
     }
   }, [product.id, open]);
+
+  useEffect(() => {
+    if (!open || !hasWeightVariants) return;
+    (async () => {
+      const { data } = await supabase
+        .from('product_weight_variants')
+        .select('*')
+        .eq('product_id', product.id)
+        .order('display_order');
+      if (data) {
+        const mapped = data.map((v) => ({
+          id: v.id,
+          product_id: v.product_id,
+          label: v.label,
+          unit_value: Number(v.unit_value) || 0,
+          unit_type: v.unit_type,
+          price: Number(v.price) || 0,
+          discounted_price:
+            v.discounted_price != null ? Number(v.discounted_price) : null,
+          display_order: v.display_order,
+        })) as WeightVariant[];
+        setWeightVariants(mapped);
+        if (mapped.length > 0 && !selectedWeightVariantId) {
+          setSelectedWeightVariantId(mapped[0].id);
+        }
+      }
+    })();
+  }, [product.id, open, hasWeightVariants, selectedWeightVariantId]);
 
   // More robust checking for colors and sizes
   const hasColors = Boolean(
@@ -264,6 +295,22 @@ export default function ProductVariantModal({
       return;
     }
 
+    if (hasWeightVariants && !selectedWeightVariantId) {
+      toast.error('Selecione uma variação de peso antes de adicionar ao carrinho');
+      return;
+    }
+
+    const selectedWeight = hasWeightVariants
+      ? weightVariants.find((v) => v.id === selectedWeightVariantId)
+      : undefined;
+    const weightPayload = selectedWeight
+      ? {
+          id: selectedWeight.id!,
+          label: selectedWeight.label,
+          price: selectedWeight.discounted_price ?? selectedWeight.price,
+        }
+      : undefined;
+
     // If distribution mode is active and has options
     if (distributionMode && hasOptions) {
       // Validate distribution is complete
@@ -279,13 +326,13 @@ export default function ProductVariantModal({
 
       // Add each distribution item to cart separately
       distributionItems.forEach(item => {
-        addToCart(product, item.color, item.size, item.quantity, unitPrice, selectedFlavor);
+        addToCart(product, item.color, item.size, item.quantity, unitPrice, selectedFlavor, weightPayload);
       });
 
       toast.success(`${quantity} ${quantity === 1 ? 'item adicionado' : 'itens adicionados'} ao carrinho`);
     } else {
       // Simple add to cart - pass selected color and size if available
-      addToCart(product, selectedColor, selectedSize, quantity, unitPrice, selectedFlavor);
+      addToCart(product, selectedColor, selectedSize, quantity, unitPrice, selectedFlavor, weightPayload);
       toast.success(`${quantity} ${quantity === 1 ? 'item adicionado' : 'itens adicionados'} ao carrinho`);
     }
 
@@ -294,10 +341,17 @@ export default function ProductVariantModal({
   };
 
   // Can add to cart if distribution is complete (when in distribution mode) or no options
-  const canAddToCart = (distributionMode ? isDistributionComplete : true) && (!hasFlavors || !!selectedFlavor);
+  const canAddToCart = (distributionMode ? isDistributionComplete : true) && (!hasFlavors || !!selectedFlavor) && (!hasWeightVariants || !!selectedWeightVariantId);
+
+  const selectedWeightVariantForPrice = hasWeightVariants
+    ? weightVariants.find((v) => v.id === selectedWeightVariantId)
+    : undefined;
+  const weightBasePrice = selectedWeightVariantForPrice
+    ? selectedWeightVariantForPrice.discounted_price ?? selectedWeightVariantForPrice.price
+    : undefined;
 
   // Calculate price with tiered pricing if applicable
-  let price = product.discounted_price || product.price;
+  let price = weightBasePrice ?? product.discounted_price ?? product.price;
   let displayPrice = price;
   let totalPrice = price * quantity;
   let pricingInfo = null;
@@ -776,6 +830,39 @@ export default function ProductVariantModal({
             </div>
           )}
 
+
+          {/* Weight Variant Selection */}
+          {hasWeightVariants && weightVariants.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <Scale className="h-4 w-4" />
+                Peso/Tamanho <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {weightVariants.map((v) => {
+                  const isSelected = selectedWeightVariantId === v.id;
+                  const effective = v.discounted_price ?? v.price;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedWeightVariantId(v.id)}
+                      className={`px-4 py-2 rounded-lg border text-sm transition-colors ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background hover:bg-accent border-border'
+                      }`}
+                    >
+                      <div className="font-medium">{v.label}</div>
+                      <div className={`text-xs ${isSelected ? 'opacity-90' : 'text-muted-foreground'}`}>
+                        {formatCurrencyI18n(effective, currency, language)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Flavor Selection */}
           {hasFlavors && (

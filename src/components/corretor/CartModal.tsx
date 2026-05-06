@@ -371,7 +371,7 @@ export default function CartModal({
                       )}
 
                       {/* Selected Variant Display */}
-                      {(item.selectedColor || item.selectedSize || item.selectedFlavor) && (
+                      {(item.selectedColor || item.selectedSize || item.selectedFlavor || item.selectedVariantLabel) && (
                         <div className="mb-2">
                           {editingVariant === item.variantId ? (
                             <div className="space-y-2">
@@ -499,6 +499,12 @@ export default function CartModal({
                                 <div className="flex items-center gap-1">
                                   <span className="font-medium">Sabor:</span>
                                   <span className="capitalize">{item.selectedFlavor}</span>
+                                </div>
+                              )}
+                              {item.selectedVariantLabel && (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium">Peso:</span>
+                                  <span>{item.selectedVariantLabel}</span>
                                 </div>
                               )}
                               <Edit3 className="h-3 w-3 ml-1" />
