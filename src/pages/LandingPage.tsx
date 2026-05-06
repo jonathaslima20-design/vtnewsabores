@@ -175,9 +175,9 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
 }
 
 function PhoneCarousel() {
-  const mockup1 = '/mockup-1.png';
-  const mockup2 = '/mockup-2.png';
-  const mockup3 = '/mockup-3.png';
+  const mockup1 = 'https://ikvwygqmlqhsyqmpgaoz.supabase.co/storage/v1/object/public/public/carrossel/mockup-1.png';
+  const mockup2 = 'https://ikvwygqmlqhsyqmpgaoz.supabase.co/storage/v1/object/public/public/carrossel/mockup-2.png';
+  const mockup3 = 'https://ikvwygqmlqhsyqmpgaoz.supabase.co/storage/v1/object/public/public/carrossel/mockup-3.png';
   const screens = [
     { src: mockup1, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
     { src: mockup2, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
