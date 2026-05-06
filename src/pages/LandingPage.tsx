@@ -139,6 +139,12 @@ type PhoneProps = {
   scale?: string;
   z?: string;
 };
+const PHONE_FALLBACK =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 470"><rect width="230" height="470" fill="#f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#64748b">VitrineTurbo</text></svg>`,
+  );
+
 function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
   return (
     <div
@@ -154,6 +160,12 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
               alt="VitrineTurbo screen"
               className="w-full h-full object-cover"
               loading="lazy"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.src !== PHONE_FALLBACK) {
+                  img.src = PHONE_FALLBACK;
+                }
+              }}
             />
           </div>
         </div>
@@ -163,13 +175,16 @@ function Phone({ src, rotate, bob, scale = '', z = '' }: PhoneProps) {
 }
 
 function PhoneCarousel() {
+  const shoe1 = 'https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=600';
+  const shoe2 = 'https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=600';
+  const shoe3 = 'https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg?auto=compress&cs=tinysrgb&w=600';
   const screens = [
-    { src: '/image.png', rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
-    { src: '/image copy.png', rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
-    { src: '/image copy copy.png', rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
-    { src: '/image.png', rotate: 'rotate(-6deg)', bob: 'lp-bob-a' },
-    { src: '/image copy copy.png', rotate: 'rotate(4deg)', bob: 'lp-bob-b' },
-    { src: '/image copy.png', rotate: 'rotate(-4deg)', bob: 'lp-bob-c' },
+    { src: shoe1, rotate: 'rotate(-8deg)', bob: 'lp-bob-a' },
+    { src: shoe2, rotate: 'rotate(0deg)', bob: 'lp-bob-b', scale: 'scale-110', z: 'relative z-10' },
+    { src: shoe3, rotate: 'rotate(8deg)', bob: 'lp-bob-c' },
+    { src: shoe1, rotate: 'rotate(-6deg)', bob: 'lp-bob-a' },
+    { src: shoe3, rotate: 'rotate(4deg)', bob: 'lp-bob-b' },
+    { src: shoe2, rotate: 'rotate(-4deg)', bob: 'lp-bob-c' },
   ];
   const sequence = [...screens, ...screens];
 
