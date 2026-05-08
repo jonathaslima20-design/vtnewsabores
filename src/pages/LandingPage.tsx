@@ -714,8 +714,8 @@ function PricingSection() {
 
   const plans = [
     {
-      name: 'Mensal',
-      price: 'R$ 57,00',
+      name: 'Trimestral',
+      price: 'R$ 149,00',
       period: 'pagamento único',
       icon: <Zap className="w-6 h-6 text-slate-700" />,
       iconBg: 'bg-slate-100',
